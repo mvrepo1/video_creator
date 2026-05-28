@@ -171,6 +171,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 /* Actions */
 .action-section{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.action-row{display:flex;align-items:center;gap:8px}
+.action-row .btn{flex:1}
+
+/* Subtitle toggle */
+.sub-toggle-row{display:flex;align-items:center;gap:8px;padding:0 2px}
+.toggle-switch{position:relative;width:34px;height:18px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-track{
+  position:absolute;inset:0;background:var(--surface3);border-radius:9px;
+  border:1px solid var(--border2);cursor:pointer;transition:background 0.2s;
+}
+.toggle-track::after{
+  content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);
+  width:12px;height:12px;border-radius:50%;background:var(--text2);
+  transition:left 0.2s,background 0.2s;
+}
+.toggle-switch input:checked + .toggle-track{background:var(--accent);border-color:var(--accent)}
+.toggle-switch input:checked + .toggle-track::after{left:18px;background:#fff}
+.toggle-label{font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.toggle-label.on{color:var(--accent2);font-weight:500}
+
+/* Subtitle style panel */
+.sub-style-panel{
+  border-top:1px solid var(--border);padding:12px 16px;
+  display:none;flex-direction:column;gap:10px;background:rgba(124,106,247,0.04);
+}
+.sub-style-panel.open{display:flex}
+.sub-row{display:flex;gap:6px;align-items:center}
+.sub-row label{font-size:11px;color:var(--text2);white-space:nowrap;min-width:60px}
+.sub-select{
+  flex:1;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:5px 8px;border-radius:var(--radius-sm);font-size:12px;outline:none;cursor:pointer;
+}
+.sub-select:focus{border-color:var(--accent)}
+.sub-number{
+  width:54px;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:5px 8px;border-radius:var(--radius-sm);font-size:12px;outline:none;text-align:center;
+}
+.sub-number:focus{border-color:var(--accent)}
+.sub-swatches{display:flex;gap:4px;flex-wrap:wrap}
+.sub-swatch{
+  width:18px;height:18px;border-radius:3px;cursor:pointer;border:2px solid transparent;
+  transition:border-color 0.15s,transform 0.1s;flex-shrink:0;
+}
+.sub-swatch:hover{transform:scale(1.2)}
+.sub-swatch.selected{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent)}
+.sub-hint{font-size:10px;color:var(--text2);line-height:1.5;padding:6px 8px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border)}
 
 /* Progress */
 .progress-section{padding:14px 16px;border-bottom:1px solid var(--border)}
@@ -491,9 +538,78 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     </div>
 
     <div class="action-section">
-      <button class="btn btn-primary" id="runBtn" disabled>▶ Tạo Video</button>
-      <button class="btn btn-warning" id="resumeBtn" style="display:none;background:var(--warning);color:#000">↩ Tiếp tục từ section <span id="resumeLabel">1</span></button>
-      <button class="btn btn-danger" id="stopBtn" disabled>■ Dừng</button>
+      <div class="action-row">
+        <button class="btn btn-primary" id="runBtn" disabled>▶ Tạo Video</button>
+        <button class="btn btn-danger" id="stopBtn" disabled>■</button>
+      </div>
+      <div class="sub-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="subToggle" />
+          <div class="toggle-track"></div>
+        </label>
+        <span class="toggle-label" id="subToggleLabel">Add Subtitle</span>
+      </div>
+      <button class="btn btn-warning" id="resumeBtn" style="display:none;background:var(--warning);color:#000">↩ Tiếp từ section <span id="resumeLabel">1</span></button>
+    </div>
+
+    <!-- SUBTITLE STYLE PANEL -->
+    <div class="sub-style-panel" id="subStylePanel">
+      <div class="sub-row">
+        <label>Font</label>
+        <select class="sub-select" id="subFont">
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Tahoma" selected>Tahoma</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Impact">Impact</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+      </div>
+      <div class="sub-row">
+        <label>Font size</label>
+        <input class="sub-number" id="subFontSize" type="number" value="20" min="10" max="80" />
+        <label style="margin-left:6px">Max chars</label>
+        <input class="sub-number" id="subMaxChars" type="number" value="40" min="10" max="100" />
+      </div>
+      <div class="sub-row">
+        <label>Vị trí</label>
+        <select class="sub-select" id="subPosition">
+          <option value="bottom">Dưới (chuẩn)</option>
+          <option value="top">Trên</option>
+          <option value="middle">Giữa</option>
+        </select>
+      </div>
+      <div class="sub-row" style="align-items:flex-start">
+        <label style="padding-top:3px">Màu chữ</label>
+        <div class="sub-swatches" id="subTextSwatches">
+          <div class="sub-swatch selected" data-color="&HFFFFFF&" style="background:#fff"           title="Trắng"></div>
+          <div class="sub-swatch"          data-color="&H00FFFF&" style="background:#FFFF00"        title="Vàng"></div>
+          <div class="sub-swatch"          data-color="&H00FFFF&" style="background:#00FFFF"        title="Cyan"></div>
+          <div class="sub-swatch"          data-color="&H14FF39&" style="background:#39FF14"        title="Xanh neon"></div>
+          <div class="sub-swatch"          data-color="&H3333FF&" style="background:#FF3333"        title="Đỏ"></div>
+          <div class="sub-swatch"          data-color="&H000000&" style="background:#111;border-color:#555" title="Đen"></div>
+        </div>
+      </div>
+      <div class="sub-row" style="align-items:flex-start">
+        <label style="padding-top:3px">Màu nền</label>
+        <div class="sub-swatches" id="subBgSwatches">
+          <div class="sub-swatch selected" data-color="&H80000000&" style="background:rgba(0,0,0,0.5)"  title="Đen mờ (chuẩn)"></div>
+          <div class="sub-swatch"          data-color="&HB0000000&" style="background:rgba(0,0,0,0.7)"  title="Đen đậm"></div>
+          <div class="sub-swatch"          data-color="&H00000000&" style="background:rgba(0,0,0,0)"    title="Trong suốt"></div>
+          <div class="sub-swatch"          data-color="&H801F1FFF&" style="background:rgba(255,31,31,0.5)"  title="Đỏ mờ"></div>
+          <div class="sub-swatch"          data-color="&H80003300&" style="background:rgba(0,51,0,0.5)"     title="Xanh mờ"></div>
+          <div class="sub-swatch"          data-color="&H80330000&" style="background:rgba(0,0,51,0.5)"     title="Xanh navy mờ"></div>
+        </div>
+      </div>
+      <div class="sub-row">
+        <label>Border</label>
+        <select class="sub-select" id="subBorderStyle">
+          <option value="3">Box (tốt nhất)</option>
+          <option value="1">Outline</option>
+          <option value="0">Không</option>
+        </select>
+      </div>
+      <div class="sub-hint" id="subHint">⚠ Cần cài <b>stable-ts</b>: <code>pip install stable-ts</code></div>
     </div>
 
     <div class="progress-section">
@@ -537,7 +653,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
         <div class="overlay-inline">
           <label>Title size</label>
-          <input class="overlay-number" id="overlayTitleSize" type="number" value="52" min="12" max="200" />
+          <input class="overlay-number" id="overlayTitleSize" type="number" value="48" min="12" max="200" />
           <label>Sub size</label>
           <input class="overlay-number" id="overlaySubSize" type="number" value="32" min="10" max="120" />
         </div>
@@ -547,12 +663,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
         <div class="overlay-color-row">
           <div class="overlay-sub-label" style="color:var(--text)">Title</div>
           <div class="color-swatches" id="titleColorSwatches">
-            <div class="color-swatch selected" data-color="white"     style="background:#ffffff"             title="Trắng"></div>
+            <div class="color-swatch" data-color="white"     style="background:#ffffff"             title="Trắng"></div>
             <div class="color-swatch"          data-color="ivory"     style="background:#FFFFF0"             title="Kem"></div>
             <div class="color-swatch"          data-color="yellow"    style="background:#FFE600"             title="Vàng"></div>
             <div class="color-swatch"          data-color="gold"      style="background:#FFD700"             title="Vàng kim"></div>
             <div class="color-swatch"          data-color="orange"    style="background:#FF8C00"             title="Cam"></div>
-            <div class="color-swatch"          data-color="red"       style="background:#FF3333"             title="Đỏ"></div>
+            <div class="color-swatch selected"          data-color="red"       style="background:#FF3333"             title="Đỏ"></div>
             <div class="color-swatch"          data-color="pink"      style="background:#FF69B4"             title="Hồng"></div>
             <div class="color-swatch"          data-color="cyan"      style="background:#00EEFF"             title="Cyan"></div>
             <div class="color-swatch"          data-color="skyblue"   style="background:#87CEEB"             title="Xanh trời"></div>
@@ -586,7 +702,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
         <div class="overlay-inline">
           <label>Top %</label>
-          <input class="overlay-number" id="overlayTop" type="number" value="10" min="0" max="90" />
+          <input class="overlay-number" id="overlayTop" type="number" value="8" min="0" max="90" />
           <label style="margin-left:8px">Hiện (s)</label>
           <input class="overlay-number" id="overlayDuration" type="number" value="5" min="1" max="60" />
         </div>
@@ -866,6 +982,48 @@ function getOverlayConfig() {
 }
 
 // ============================================================
+// SUBTITLE TOGGLE + CONFIG
+// ============================================================
+let subTextColor = "&HFFFFFF&";
+let subBgColor   = "&H80000000&";
+
+const subToggle = document.getElementById("subToggle");
+const subPanel  = document.getElementById("subStylePanel");
+const subLabel  = document.getElementById("subToggleLabel");
+
+subToggle.addEventListener("change", () => {
+  subPanel.classList.toggle("open", subToggle.checked);
+  subLabel.classList.toggle("on", subToggle.checked);
+});
+
+function initSubSwatches(containerId, onPick) {
+  document.getElementById(containerId).addEventListener("click", e => {
+    const sw = e.target.closest(".sub-swatch");
+    if (!sw) return;
+    document.querySelectorAll(`#${containerId} .sub-swatch`).forEach(s => s.classList.remove("selected"));
+    sw.classList.add("selected");
+    onPick(sw.dataset.color);
+  });
+}
+initSubSwatches("subTextSwatches", c => subTextColor = c);
+initSubSwatches("subBgSwatches",   c => subBgColor   = c);
+
+function getSubtitleConfig() {
+  if (!document.getElementById("subToggle").checked) return null;
+  const posMap = { bottom: 2, middle: 5, top: 8 };
+  return {
+    enabled:     true,
+    font:        document.getElementById("subFont").value,
+    fontSize:    parseInt(document.getElementById("subFontSize").value) || 20,
+    maxChars:    parseInt(document.getElementById("subMaxChars").value) || 40,
+    position:    posMap[document.getElementById("subPosition").value] || 2,
+    textColor:   subTextColor,
+    bgColor:     subBgColor,
+    borderStyle: parseInt(document.getElementById("subBorderStyle").value),
+  };
+}
+
+// ============================================================
 // RUN / STOP
 // ============================================================
 document.getElementById("runBtn").addEventListener("click", () => runPipeline(0));
@@ -896,6 +1054,7 @@ async function runPipeline(fromIndex = 0) {
     overlay: getOverlayConfig(),
     bgMusic: bgMusicPath,
     bgMusicVolume: parseInt(document.getElementById("bgMusicVolume").value) / 100,
+    subtitle: getSubtitleConfig(),
   });
 }
 
