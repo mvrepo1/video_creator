@@ -262,6 +262,72 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .overlay-color-row{display:flex;align-items:center;gap:8px}
 .overlay-color-row .overlay-sub-label{margin-top:0;white-space:nowrap;min-width:38px}
 
+/* ── HEADER RIGHT ── */
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* ── MODAL ── */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+}
+.modal-backdrop.show{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  width:420px;max-width:95vw;box-shadow:0 24px 80px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;max-height:85vh;overflow:hidden;
+}
+.modal-header{
+  padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.modal-title{font-size:15px;font-weight:600;color:var(--text)}
+.modal-close{
+  background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;
+  padding:4px 8px;border-radius:6px;line-height:1;
+}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.modal-body{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+
+.field-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
+.field-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:8px 11px;border-radius:var(--radius-sm);
+  font-size:12px;outline:none;
+}
+.field-input:focus{border-color:var(--accent)}
+.field-input::placeholder{color:var(--text2)}
+.field-hint{font-size:10px;color:var(--text2);margin-top:4px;line-height:1.5}
+
+.r2-status{
+  display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 10px;
+  border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface2);
+}
+.r2-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.r2-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success)}
+.r2-dot.err{background:var(--error)}
+
+.upload-progress{display:flex;flex-direction:column;gap:6px}
+.upload-progress-bar-wrap{background:var(--surface3);border-radius:3px;height:5px;overflow:hidden}
+.upload-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.25s;border-radius:3px;width:0%}
+.upload-progress-text{font-size:11px;color:var(--text2);text-align:center}
+
+.tpl-list{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto;padding-right:2px}
+.tpl-list::-webkit-scrollbar{width:4px}
+.tpl-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.tpl-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  transition:border-color 0.15s;
+}
+.tpl-item:hover{border-color:var(--accent)}
+.tpl-info{flex:1;overflow:hidden}
+.tpl-name{font-size:13px;font-weight:600;color:var(--text)}
+.tpl-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.tpl-url{font-size:10px;color:var(--border2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpl-loading,.tpl-empty{text-align:center;padding:24px;font-size:13px;color:var(--text2)}
+
 /* ── EMPTY STATE ── */
 .empty-state{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -305,9 +371,97 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
       <button class="seg-btn" data-val="es">🇪🇸 ES</button>
     </div>
   </div>
+
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" id="r2SettingsBtn">⚙ R2</button>
+    <button class="btn btn-ghost btn-sm" id="loadTemplateBtn">📂 Load Template</button>
+    <button class="btn btn-ghost btn-sm" id="saveTemplateBtn">💾 Save Template</button>
+  </div>
 </div>
 
-<!-- MAIN -->
+<!-- MODAL: R2 SETTINGS -->
+<div class="modal-backdrop" id="r2Modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙ Cloudflare R2 Settings</div>
+      <button class="modal-close" id="r2ModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">Account ID</div>
+        <input class="field-input" id="r2AccountId" placeholder="abc123def456..." />
+      </div>
+      <div>
+        <div class="field-label">Access Key ID</div>
+        <input class="field-input" id="r2AccessKeyId" placeholder="R2 Access Key ID" />
+      </div>
+      <div>
+        <div class="field-label">Secret Access Key</div>
+        <input class="field-input" id="r2SecretKey" type="password" placeholder="••••••••••••••••" />
+      </div>
+      <div>
+        <div class="field-label">Bucket Name</div>
+        <input class="field-input" id="r2Bucket" placeholder="my-bucket" />
+      </div>
+      <div>
+        <div class="field-label">Public URL Prefix</div>
+        <input class="field-input" id="r2PublicUrl" placeholder="https://pub-xxx.r2.dev" />
+        <div class="field-hint">URL gốc để tạo link công khai cho ảnh (không có / ở cuối)</div>
+      </div>
+      <div class="r2-status" id="r2Status">
+        <div class="r2-dot" id="r2Dot"></div>
+        <span id="r2StatusText">Chưa cấu hình</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="r2TestBtn">🔌 Test kết nối</button>
+      <button class="btn btn-primary btn-sm" id="r2SaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SAVE TEMPLATE -->
+<div class="modal-backdrop" id="saveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💾 Save Template</div>
+      <button class="modal-close" id="saveModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">Template Name</div>
+        <input class="field-input" id="templateName" placeholder="vd: truyen-ngan-01" />
+        <div class="field-hint">File JSON sẽ được lưu vào thư mục <code style="color:var(--accent2)">&lt;template-name&gt;/</code> trên R2.<br>Có thể save nhiều file vào cùng 1 thư mục bằng cách dùng cùng tên.</div>
+      </div>
+      <div class="upload-progress" id="uploadProgress" style="display:none">
+        <div class="upload-progress-bar-wrap">
+          <div class="upload-progress-bar" id="uploadProgressBar"></div>
+        </div>
+        <div class="upload-progress-text" id="uploadProgressText">Đang upload...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="saveModalCancel">Hủy</button>
+      <button class="btn btn-primary btn-sm" id="saveTemplateConfirmBtn">⬆ Upload & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LOAD TEMPLATE -->
+<div class="modal-backdrop" id="loadModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header">
+      <div class="modal-title">📂 Load Template</div>
+      <button class="modal-close" id="loadModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tpl-list" id="templateList">
+        <div class="tpl-loading">Đang tải...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="main">
 
   <!-- SECTIONS -->
@@ -540,8 +694,11 @@ function renderSections() {
 
   list.innerHTML = sections.map((s, i) => {
     const isPortrait = config.aspectRatio === "9:16";
-    const hasImg = s.imagePath && s.imagePath.length > 0;
-    const imgName = hasImg ? s.imagePath.split(/[\\/]/).pop() : "";
+    const hasLocal = s.imagePath && s.imagePath.length > 0;
+    const hasUrl   = !hasLocal && s.imageUrl && s.imageUrl.length > 0;
+    const hasImg   = hasLocal || hasUrl;
+    const imgSrc   = hasLocal ? `file://${s.imagePath}` : (hasUrl ? s.imageUrl : "");
+    const imgName  = hasLocal ? s.imagePath.split(/[\\/]/).pop() : (hasUrl ? "🌐 " + s.imageUrl.split("/").pop() : "");
     return `
     <div class="section-card" id="card-${s.id}">
       <div class="section-header">
@@ -562,7 +719,7 @@ function renderSections() {
         <div class="image-area">
           <div class="script-label">Hình ảnh</div>
           <div class="image-preview ${isPortrait?"portrait":""}" id="imgprev-${s.id}" onclick="pickImage(${s.id})" title="Click để chọn ảnh">
-            <img id="imgel-${s.id}" src="" alt="" ${hasImg?`src="file://${s.imagePath}"`:""} class="${hasImg?"loaded":""}"/>
+            <img id="imgel-${s.id}" src="${imgSrc}" alt="" class="${hasImg?"loaded":""}"/>
             <div class="image-placeholder" id="imgph-${s.id}" style="display:${hasImg?"none":"flex"};flex-direction:column;align-items:center">
               <div class="icon">🖼</div>
               <div>Click để chọn</div>
@@ -613,7 +770,7 @@ function updateImagePreviews() {
 
 function updateRunBtn() {
   const valid = sections.length > 0 &&
-    sections.every(s => s.script.trim().length > 0 && s.imagePath.length > 0);
+    sections.every(s => s.script.trim().length > 0 && (s.imagePath?.length > 0 || s.imageUrl?.length > 0));
   document.getElementById("runBtn").disabled = !valid || isRunning;
 }
 
@@ -822,6 +979,320 @@ function clearLog() {
   document.getElementById("logContainer").innerHTML = "";
 }
 
+
+// ============================================================
+// R2 SETTINGS
+// ============================================================
+let r2Config = JSON.parse(localStorage.getItem("r2Config") || "{}");
+
+function loadR2Fields() {
+  if (r2Config.accountId)   document.getElementById("r2AccountId").value  = r2Config.accountId;
+  if (r2Config.accessKeyId) document.getElementById("r2AccessKeyId").value = r2Config.accessKeyId;
+  if (r2Config.secretKey)   document.getElementById("r2SecretKey").value   = r2Config.secretKey;
+  if (r2Config.bucket)      document.getElementById("r2Bucket").value      = r2Config.bucket;
+  if (r2Config.publicUrl)   document.getElementById("r2PublicUrl").value   = r2Config.publicUrl;
+  updateR2StatusBadge(!!r2Config.accountId);
+}
+
+function updateR2StatusBadge(ok, msg) {
+  const dot  = document.getElementById("r2Dot");
+  const text = document.getElementById("r2StatusText");
+  dot.className  = "r2-dot" + (ok ? " ok" : (msg ? " err" : ""));
+  text.textContent = msg || (ok ? "Đã cấu hình" : "Chưa cấu hình");
+}
+
+document.getElementById("r2SettingsBtn").addEventListener("click", () => {
+  loadR2Fields();
+  document.getElementById("r2Modal").classList.add("show");
+});
+document.getElementById("r2ModalClose").addEventListener("click", () => document.getElementById("r2Modal").classList.remove("show"));
+document.getElementById("r2Modal").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("show"); });
+
+document.getElementById("r2SaveBtn").addEventListener("click", () => {
+  r2Config = {
+    accountId:   document.getElementById("r2AccountId").value.trim(),
+    accessKeyId: document.getElementById("r2AccessKeyId").value.trim(),
+    secretKey:   document.getElementById("r2SecretKey").value.trim(),
+    bucket:      document.getElementById("r2Bucket").value.trim(),
+    publicUrl:   document.getElementById("r2PublicUrl").value.trim().replace(/\/$/, ""),
+  };
+  localStorage.setItem("r2Config", JSON.stringify(r2Config));
+  updateR2StatusBadge(!!r2Config.accountId);
+  document.getElementById("r2Modal").classList.remove("show");
+});
+
+document.getElementById("r2TestBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("r2TestBtn");
+  btn.disabled = true; btn.textContent = "Đang test...";
+  try {
+    await r2PutObject("__test__/ping.txt", new Blob(["ok"], {type:"text/plain"}), "text/plain");
+    updateR2StatusBadge(true, "Kết nối thành công ✓");
+  } catch (e) {
+    updateR2StatusBadge(false, "Lỗi: " + e.message.slice(0, 60));
+  }
+  btn.disabled = false; btn.textContent = "🔌 Test kết nối";
+});
+
+// ============================================================
+// AWS SIGNATURE V4 (R2 compatible)
+// ============================================================
+async function sha256hex(data) {
+  const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+async function hmacSha256(key, data) {
+  const k = key instanceof CryptoKey ? key :
+    await crypto.subtle.importKey("raw", typeof key === "string" ? new TextEncoder().encode(key) : key,
+      {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", k, typeof data === "string" ? new TextEncoder().encode(data) : data);
+  return new Uint8Array(sig);
+}
+
+async function getSigningKey(secretKey, dateStamp, region, service) {
+  const kDate    = await hmacSha256("AWS4" + secretKey, dateStamp);
+  const kRegion  = await hmacSha256(kDate, region);
+  const kService = await hmacSha256(kRegion, service);
+  return hmacSha256(kService, "aws4_request");
+}
+
+async function r2PutObject(key, body, contentType) {
+  const { accountId, accessKeyId, secretKey, bucket } = r2Config;
+  if (!accountId || !accessKeyId || !secretKey || !bucket)
+    throw new Error("Chưa cấu hình R2. Vui lòng vào ⚙ R2 để nhập thông tin.");
+
+  const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+  const region   = "auto";
+  const service  = "s3";
+
+  const now       = new Date();
+  const amzDate   = now.toISOString().replace(/[-:]/g,"").replace(/\..+/,"Z");
+  const dateStamp = amzDate.slice(0, 8);
+
+  const bodyBuf = body instanceof Blob ? new Uint8Array(await body.arrayBuffer()) : body;
+  const payloadHash = await sha256hex(bodyBuf);
+
+  const host          = `${accountId}.r2.cloudflarestorage.com`;
+  const canonicalUri  = `/${bucket}/${key}`;
+  const canonicalQS   = "";
+  const canonicalHdrs = `content-type:${contentType}\nhost:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const signedHdrs    = "content-type;host;x-amz-content-sha256;x-amz-date";
+  const canonicalReq  = ["PUT", canonicalUri, canonicalQS, canonicalHdrs, signedHdrs, payloadHash].join("\n");
+
+  const credScope  = `${dateStamp}/${region}/${service}/aws4_request`;
+  const strToSign  = ["AWS4-HMAC-SHA256", amzDate, credScope, await sha256hex(new TextEncoder().encode(canonicalReq))].join("\n");
+  const signingKey = await getSigningKey(secretKey, dateStamp, region, service);
+  const sigBytes   = await hmacSha256(signingKey, strToSign);
+  const signature  = Array.from(sigBytes).map(b => b.toString(16).padStart(2,"0")).join("");
+
+  const auth = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credScope}, SignedHeaders=${signedHdrs}, Signature=${signature}`;
+
+  const res = await fetch(`${endpoint}${canonicalUri}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type":            contentType,
+      "x-amz-date":              amzDate,
+      "x-amz-content-sha256":    payloadHash,
+      "Authorization":           auth,
+    },
+    body: bodyBuf,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => res.status);
+    throw new Error(`R2 PUT ${res.status}: ${txt}`);
+  }
+}
+
+function r2PublicUrlFor(key) {
+  return `${r2Config.publicUrl}/${key}`;
+}
+
+// ============================================================
+// SAVE TEMPLATE
+// ============================================================
+document.getElementById("saveTemplateBtn").addEventListener("click", () => {
+  if (!sections.length) { log("Không có section nào để save.", "error"); return; }
+  if (!r2Config.accountId) { log("Chưa cấu hình R2.", "error"); document.getElementById("r2Modal").classList.add("show"); loadR2Fields(); return; }
+  document.getElementById("uploadProgress").style.display = "none";
+  document.getElementById("uploadProgressBar").style.width = "0%";
+  document.getElementById("saveTemplateConfirmBtn").disabled = false;
+  document.getElementById("saveTemplateConfirmBtn").textContent = "⬆ Upload & Save";
+  document.getElementById("saveModal").classList.add("show");
+});
+document.getElementById("saveModalClose").addEventListener("click", () => document.getElementById("saveModal").classList.remove("show"));
+document.getElementById("saveModalCancel").addEventListener("click", () => document.getElementById("saveModal").classList.remove("show"));
+document.getElementById("saveModal").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("show"); });
+
+document.getElementById("saveTemplateConfirmBtn").addEventListener("click", async () => {
+  const templateName = document.getElementById("templateName").value.trim();
+  if (!templateName) { document.getElementById("templateName").focus(); return; }
+
+  const btn = document.getElementById("saveTemplateConfirmBtn");
+  btn.disabled = true;
+
+  const progressWrap = document.getElementById("uploadProgress");
+  const progressBar  = document.getElementById("uploadProgressBar");
+  const progressText = document.getElementById("uploadProgressText");
+  progressWrap.style.display = "flex";
+
+  const total  = sections.length + 1; // sections + 1 json file
+  let   done   = 0;
+
+  function setUploadPct(msg) {
+    done++;
+    const pct = Math.round((done / total) * 100);
+    progressBar.style.width = pct + "%";
+    progressText.textContent = msg;
+  }
+
+  try {
+    const resultSections = [];
+
+    for (let i = 0; i < sections.length; i++) {
+      const s = sections[i];
+      progressText.textContent = `Uploading ảnh ${i+1}/${sections.length}...`;
+
+      let imageUrl = "";
+      if (s.imagePath) {
+        // Đọc file ảnh qua fetch file://
+        const imgRes  = await fetch(`file://${s.imagePath.replace(/\\/g, "/")}`);
+        const imgBlob = await imgRes.blob();
+        const ext     = s.imagePath.split(".").pop().toLowerCase();
+        const mime    = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+        const imgKey  = `${templateName}/images/section_${String(i+1).padStart(3,"0")}.${ext}`;
+        await r2PutObject(imgKey, imgBlob, mime);
+        imageUrl = r2PublicUrlFor(imgKey);
+      }
+
+      resultSections.push({ script: s.script, imageUrl });
+      setUploadPct(`Uploaded ảnh ${i+1}/${sections.length}`);
+    }
+
+    // Upload JSON template
+    progressText.textContent = "Lưu file template JSON...";
+    const timestamp = new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
+    const jsonKey   = `${templateName}/template_${timestamp}.json`;   // FIX: bỏ tên folder khỏi tên file
+    const createdAt = new Date().toISOString();
+    const payload   = JSON.stringify({ templateName, createdAt, sections: resultSections }, null, 2);
+    await r2PutObject(jsonKey, new Blob([payload], {type:"application/json"}), "application/json");
+    setUploadPct("Đang cập nhật summary...");
+
+    // Cập nhật template_summary.json
+    await upsertSummary({ templateName, jsonKey, jsonUrl: r2PublicUrlFor(jsonKey), createdAt, sectionCount: resultSections.length });
+
+    log(`✅ Template "${templateName}" đã lưu lên R2: ${jsonKey}`, "success");
+    btn.textContent = "✓ Đã lưu!";
+    setTimeout(() => document.getElementById("saveModal").classList.remove("show"), 1200);
+
+  } catch (e) {
+    log(`❌ Save template thất bại: ${e.message}`, "error");
+    progressText.textContent = "❌ " + e.message.slice(0, 80);
+    btn.disabled = false;
+    btn.textContent = "⬆ Upload & Save";
+  }
+});
+
+// ============================================================
+// SUMMARY HELPERS
+// ============================================================
+const SUMMARY_KEY = "template_summary.json";
+
+async function r2GetObject(key) {
+  const { publicUrl } = r2Config;
+  if (!publicUrl) throw new Error("Chưa cấu hình Public URL");
+  const url = `${publicUrl}/${key}?t=${Date.now()}`;
+  const res = await fetch(url);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GET ${res.status}`);
+  return res.json();
+}
+
+async function upsertSummary(entry) {
+  // entry: { templateName, jsonKey, jsonUrl, createdAt, sectionCount }
+  let summary = { templates: [] };
+  try {
+    const existing = await r2GetObject(SUMMARY_KEY);
+    if (existing) summary = existing;
+  } catch (_) {}
+
+  summary.templates.push(entry);
+  await r2PutObject(
+    SUMMARY_KEY,
+    new Blob([JSON.stringify(summary, null, 2)], {type:"application/json"}),
+    "application/json"
+  );
+}
+
+// ============================================================
+// LOAD TEMPLATE
+// ============================================================
+document.getElementById("loadTemplateBtn").addEventListener("click", async () => {
+  if (!r2Config.accountId) {
+    log("Chưa cấu hình R2.", "error");
+    document.getElementById("r2Modal").classList.add("show"); loadR2Fields(); return;
+  }
+  const listEl = document.getElementById("templateList");
+  listEl.innerHTML = `<div class="tpl-loading">Đang tải danh sách...</div>`;
+  document.getElementById("loadModal").classList.add("show");
+
+  try {
+    const summary = await r2GetObject(SUMMARY_KEY);
+    if (!summary || !summary.templates?.length) {
+      listEl.innerHTML = `<div class="tpl-empty">Chưa có template nào được lưu.</div>`;
+      return;
+    }
+    // Hiện mới nhất trước
+    const list = [...summary.templates].reverse();
+    listEl.innerHTML = "";
+    list.forEach((tpl, idx) => {
+      const d = new Date(tpl.createdAt);
+      const dateStr = d.toLocaleDateString("vi-VN") + " " + d.toLocaleTimeString("vi-VN", {hour:"2-digit",minute:"2-digit"});
+      const item = document.createElement("div");
+      item.className = "tpl-item";
+      item.innerHTML = `
+        <div class="tpl-info">
+          <div class="tpl-name">${tpl.templateName}</div>
+          <div class="tpl-meta">${tpl.sectionCount} sections · ${dateStr}</div>
+          <div class="tpl-url">${tpl.jsonKey}</div>
+        </div>
+        <button class="btn btn-primary btn-sm tpl-load-btn" data-url="${tpl.jsonUrl}">Load</button>
+      `;
+      listEl.appendChild(item);
+    });
+  } catch (e) {
+    listEl.innerHTML = `<div class="tpl-empty" style="color:var(--error)">Lỗi: ${e.message}</div>`;
+  }
+});
+
+document.getElementById("loadModal").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("show"); });
+document.getElementById("loadModalClose").addEventListener("click", () => document.getElementById("loadModal").classList.remove("show"));
+
+document.getElementById("templateList").addEventListener("click", async e => {
+  const btn = e.target.closest(".tpl-load-btn");
+  if (!btn) return;
+  const url = btn.dataset.url;
+  btn.disabled = true; btn.textContent = "Loading...";
+  try {
+    const res  = await fetch(url + "?t=" + Date.now());
+    const data = await res.json();
+    // Thay toàn bộ sections hiện tại
+    sections = data.sections.map(s => ({
+      id: Date.now() + Math.random(),
+      script:    s.script    || "",
+      imagePath: "",          // ảnh từ URL, không phải local path
+      imageUrl:  s.imageUrl  || "",  // giữ URL để hiển thị preview
+    }));
+    renderSections();
+    updateStats();
+    document.getElementById("loadModal").classList.remove("show");
+    log(`✅ Đã load template "${data.templateName}" (${sections.length} sections)`, "success");
+  } catch (e) {
+    btn.disabled = false; btn.textContent = "Load";
+    log(`❌ Load thất bại: ${e.message}`, "error");
+  }
+});
+
 // ============================================================
 // ADD SECTION BUTTON
 // ============================================================
@@ -830,6 +1301,7 @@ document.getElementById("addSectionBtn").addEventListener("click", addSection);
 // Init
 renderSections();
 updateStats();
+loadR2Fields();
 </script>
 </body>
 </html>
