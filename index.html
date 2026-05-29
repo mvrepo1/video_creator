@@ -255,6 +255,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .summary-stat{display:flex;align-items:center;gap:5px}
 .summary-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 
+.font-style-group{display:flex;gap:4px}
+.fs-btn{
+  width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;
+  user-select:none;line-height:1;
+}
+.fs-btn:hover{border-color:var(--accent);color:var(--text)}
+.fs-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 8px var(--accent-glow)}
+.fs-btn.bold-btn{font-weight:700}
+.fs-btn.italic-btn{font-style:italic}
+
 /* ── BG MUSIC ── */
 .music-row{display:flex;gap:6px;align-items:center}
 .music-name{
@@ -375,6 +387,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .tpl-url{font-size:10px;color:var(--border2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tpl-loading,.tpl-empty{text-align:center;padding:24px;font-size:13px;color:var(--text2)}
 
+.cfg-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;padding-right:2px}
+.cfg-list::-webkit-scrollbar{width:4px}
+.cfg-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.cfg-item{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  transition:border-color 0.15s;cursor:pointer;
+}
+.cfg-item:hover{border-color:var(--accent)}
+.cfg-info{flex:1;overflow:hidden}
+.cfg-name{font-size:13px;font-weight:600;color:var(--text)}
+.cfg-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.cfg-del{
+  background:none;border:none;color:var(--border2);font-size:14px;cursor:pointer;
+  padding:2px 6px;border-radius:4px;transition:color 0.15s,background 0.15s;flex-shrink:0;
+}
+.cfg-del:hover{color:var(--error);background:rgba(255,60,60,0.1)}
+.cfg-empty{text-align:center;padding:24px;font-size:13px;color:var(--text2)}
+
 /* ── EMPTY STATE ── */
 .empty-state{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -421,8 +452,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
   <div class="header-right">
     <button class="btn btn-ghost btn-sm" id="r2SettingsBtn">⚙ R2</button>
-    <button class="btn btn-ghost btn-sm" id="loadTemplateBtn">📂 Load Template</button>
-    <button class="btn btn-ghost btn-sm" id="saveTemplateBtn">💾 Save Template</button>
+    <button class="btn btn-ghost btn-sm" id="loadTemplateBtn">📂 Template</button>
+    <button class="btn btn-ghost btn-sm" id="saveTemplateBtn">💾 Template</button>
+    <div style="width:1px;height:16px;background:var(--border);margin:0 2px"></div>
+    <button class="btn btn-ghost btn-sm" id="loadConfigBtn">📂 Config</button>
+    <button class="btn btn-ghost btn-sm" id="saveConfigBtn">💾 Config</button>
   </div>
 </div>
 
@@ -509,6 +543,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   </div>
 </div>
 
+<!-- MODAL: SAVE CONFIG -->
+<div class="modal-backdrop" id="saveConfigModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💾 Lưu cấu hình</div>
+      <button class="modal-close" id="saveConfigModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">Tên cấu hình</div>
+        <input class="field-input" id="configName" placeholder="vd: TikTok Tiếng Việt Nữ" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="saveConfigCancel">Hủy</button>
+      <button class="btn btn-primary btn-sm" id="saveConfigConfirm">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LOAD CONFIG -->
+<div class="modal-backdrop" id="loadConfigModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title">📂 Load cấu hình</div>
+      <button class="modal-close" id="loadConfigModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="cfg-list" id="configList"></div>
+    </div>
+  </div>
+</div>
+
 <div class="main">
 
   <!-- SECTIONS -->
@@ -564,6 +631,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
           <option value="Impact">Impact</option>
           <option value="Courier New">Courier New</option>
         </select>
+        <div class="font-style-group">
+          <button class="fs-btn bold-btn" id="subBold" title="Bold">B</button>
+          <button class="fs-btn italic-btn" id="subItalic" title="Italic"><i>I</i></button>
+        </div>
       </div>
       <div class="sub-row">
         <label>Font size</label>
@@ -642,18 +713,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
         <input class="overlay-input" id="overlaySubtitle" placeholder="Subtitle (để trống = không hiện)" />
 
         <div class="overlay-sub-label">Font</div>
-        <select class="overlay-select" id="overlayFont">
-          <option value="Arial">Arial</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Tahoma">Tahoma</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Impact">Impact</option>
-        </select>
+        <div class="overlay-inline" style="gap:6px">
+          <select class="overlay-select" id="overlayFont">
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Tahoma">Tahoma</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Impact">Impact</option>
+          </select>
+          <div class="font-style-group">
+            <button class="fs-btn bold-btn" id="overlayBold" title="Bold">B</button>
+            <button class="fs-btn italic-btn" id="overlayItalic" title="Italic"><i>I</i></button>
+          </div>
+        </div>
 
         <div class="overlay-inline">
           <label>Title size</label>
-          <input class="overlay-number" id="overlayTitleSize" type="number" value="48" min="12" max="200" />
+          <input class="overlay-number" id="overlayTitleSize" type="number" value="52" min="12" max="200" />
           <label>Sub size</label>
           <input class="overlay-number" id="overlaySubSize" type="number" value="32" min="10" max="120" />
         </div>
@@ -663,12 +740,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
         <div class="overlay-color-row">
           <div class="overlay-sub-label" style="color:var(--text)">Title</div>
           <div class="color-swatches" id="titleColorSwatches">
-            <div class="color-swatch" data-color="white"     style="background:#ffffff"             title="Trắng"></div>
+            <div class="color-swatch selected" data-color="white"     style="background:#ffffff"             title="Trắng"></div>
             <div class="color-swatch"          data-color="ivory"     style="background:#FFFFF0"             title="Kem"></div>
             <div class="color-swatch"          data-color="yellow"    style="background:#FFE600"             title="Vàng"></div>
             <div class="color-swatch"          data-color="gold"      style="background:#FFD700"             title="Vàng kim"></div>
             <div class="color-swatch"          data-color="orange"    style="background:#FF8C00"             title="Cam"></div>
-            <div class="color-swatch selected"          data-color="red"       style="background:#FF3333"             title="Đỏ"></div>
+            <div class="color-swatch"          data-color="red"       style="background:#FF3333"             title="Đỏ"></div>
             <div class="color-swatch"          data-color="pink"      style="background:#FF69B4"             title="Hồng"></div>
             <div class="color-swatch"          data-color="cyan"      style="background:#00EEFF"             title="Cyan"></div>
             <div class="color-swatch"          data-color="skyblue"   style="background:#87CEEB"             title="Xanh trời"></div>
@@ -702,7 +779,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
         <div class="overlay-inline">
           <label>Top %</label>
-          <input class="overlay-number" id="overlayTop" type="number" value="8" min="0" max="90" />
+          <input class="overlay-number" id="overlayTop" type="number" value="10" min="0" max="90" />
           <label style="margin-left:8px">Hiện (s)</label>
           <input class="overlay-number" id="overlayDuration" type="number" value="5" min="1" max="60" />
         </div>
@@ -948,6 +1025,15 @@ volSlider.addEventListener("input", () => {
 let overlayTitleColor = "white";
 let overlaySubColor = "white";
 
+// Bold / Italic toggles — overlay
+function initFsBtn(id) {
+  const btn = document.getElementById(id);
+  btn.addEventListener("click", () => btn.classList.toggle("active"));
+  return btn;
+}
+const overlayBoldBtn   = initFsBtn("overlayBold");
+const overlayItalicBtn = initFsBtn("overlayItalic");
+
 document.getElementById("titleColorSwatches").addEventListener("click", e => {
   const sw = e.target.closest(".color-swatch");
   if (!sw) return;
@@ -972,6 +1058,8 @@ function getOverlayConfig() {
     title,
     subtitle,
     font: document.getElementById("overlayFont").value,
+    bold:   overlayBoldBtn.classList.contains("active"),
+    italic: overlayItalicBtn.classList.contains("active"),
     titleSize: parseInt(document.getElementById("overlayTitleSize").value) || 52,
     subSize: parseInt(document.getElementById("overlaySubSize").value) || 32,
     titleColor: overlayTitleColor,
@@ -1008,12 +1096,17 @@ function initSubSwatches(containerId, onPick) {
 initSubSwatches("subTextSwatches", c => subTextColor = c);
 initSubSwatches("subBgSwatches",   c => subBgColor   = c);
 
+const subBoldBtn   = initFsBtn("subBold");
+const subItalicBtn = initFsBtn("subItalic");
+
 function getSubtitleConfig() {
   if (!document.getElementById("subToggle").checked) return null;
   const posMap = { bottom: 2, middle: 5, top: 8 };
   return {
     enabled:     true,
     font:        document.getElementById("subFont").value,
+    bold:        subBoldBtn.classList.contains("active"),
+    italic:      subItalicBtn.classList.contains("active"),
     fontSize:    parseInt(document.getElementById("subFontSize").value) || 20,
     maxChars:    parseInt(document.getElementById("subMaxChars").value) || 40,
     position:    posMap[document.getElementById("subPosition").value] || 2,
@@ -1451,6 +1544,233 @@ document.getElementById("templateList").addEventListener("click", async e => {
     log(`❌ Load thất bại: ${e.message}`, "error");
   }
 });
+
+// ============================================================
+// SAVE / LOAD CONFIG
+// ============================================================
+const CONFIG_STORE_KEY = "vcreator_configs";
+
+function captureConfig() {
+  return {
+    // General
+    aspectRatio:   config.aspectRatio,
+    gender:        config.gender,
+    lang:          config.lang,
+    outputDir:     config.outputDir,
+
+    // BG Music
+    bgMusicPath:   bgMusicPath,
+    bgMusicVolume: parseInt(document.getElementById("bgMusicVolume").value),
+
+    // Text Overlay
+    overlayTitle:      document.getElementById("overlayTitle").value,
+    overlaySubtitle:   document.getElementById("overlaySubtitle").value,
+    overlayFont:       document.getElementById("overlayFont").value,
+    overlayBold:       overlayBoldBtn.classList.contains("active"),
+    overlayItalic:     overlayItalicBtn.classList.contains("active"),
+    overlayTitleSize:  document.getElementById("overlayTitleSize").value,
+    overlaySubSize:    document.getElementById("overlaySubSize").value,
+    overlayTitleColor: overlayTitleColor,
+    overlaySubColor:   overlaySubColor,
+    overlayTop:        document.getElementById("overlayTop").value,
+    overlayDuration:   document.getElementById("overlayDuration").value,
+
+    // Subtitle
+    subEnabled:     document.getElementById("subToggle").checked,
+    subFont:        document.getElementById("subFont").value,
+    subBold:        subBoldBtn.classList.contains("active"),
+    subItalic:      subItalicBtn.classList.contains("active"),
+    subFontSize:    document.getElementById("subFontSize").value,
+    subMaxChars:    document.getElementById("subMaxChars").value,
+    subPosition:    document.getElementById("subPosition").value,
+    subTextColor:   subTextColor,
+    subBgColor:     subBgColor,
+    subBorderStyle: document.getElementById("subBorderStyle").value,
+  };
+}
+
+function applyConfig(cfg) {
+  // General — segmented controls
+  const setSegment = (id, val) => {
+    const seg = document.getElementById(id);
+    if (!seg) return;
+    seg.querySelectorAll(".seg-btn").forEach(btn => {
+      const active = btn.dataset.val === val;
+      btn.classList.toggle("active", active);
+    });
+  };
+  setSegment("aspectSeg", cfg.aspectRatio);
+  setSegment("genderSeg", cfg.gender);
+  setSegment("langSeg",   cfg.lang);
+  config.aspectRatio = cfg.aspectRatio || config.aspectRatio;
+  config.gender      = cfg.gender      || config.gender;
+  config.lang        = cfg.lang        || config.lang;
+
+  if (cfg.outputDir) {
+    config.outputDir = cfg.outputDir;
+    document.getElementById("outputDir").value = cfg.outputDir;
+  }
+
+  // BG Music
+  if (cfg.bgMusicPath) {
+    bgMusicPath = cfg.bgMusicPath;
+    const name = cfg.bgMusicPath.split(/[\\/]/).pop();
+    const el = document.getElementById("musicName");
+    el.textContent = name; el.classList.add("has-file");
+    document.getElementById("clearMusicBtn").style.display = "";
+  } else {
+    bgMusicPath = null;
+    document.getElementById("musicName").textContent = "Chưa chọn file nhạc";
+    document.getElementById("musicName").classList.remove("has-file");
+    document.getElementById("clearMusicBtn").style.display = "none";
+  }
+  if (cfg.bgMusicVolume != null) {
+    const slider = document.getElementById("bgMusicVolume");
+    slider.value = cfg.bgMusicVolume;
+    document.getElementById("bgMusicVolumeVal").textContent = cfg.bgMusicVolume + "%";
+    slider.style.background = `linear-gradient(90deg, var(--accent) ${cfg.bgMusicVolume}%, var(--surface3) ${cfg.bgMusicVolume}%)`;
+  }
+
+  // Text Overlay
+  if (cfg.overlayTitle    != null) document.getElementById("overlayTitle").value    = cfg.overlayTitle;
+  if (cfg.overlaySubtitle != null) document.getElementById("overlaySubtitle").value = cfg.overlaySubtitle;
+  if (cfg.overlayFont)             document.getElementById("overlayFont").value     = cfg.overlayFont;
+  if (cfg.overlayTitleSize)        document.getElementById("overlayTitleSize").value = cfg.overlayTitleSize;
+  if (cfg.overlaySubSize)          document.getElementById("overlaySubSize").value   = cfg.overlaySubSize;
+  if (cfg.overlayTop)              document.getElementById("overlayTop").value       = cfg.overlayTop;
+  if (cfg.overlayDuration)         document.getElementById("overlayDuration").value  = cfg.overlayDuration;
+  overlayBoldBtn.classList.toggle("active",   !!cfg.overlayBold);
+  overlayItalicBtn.classList.toggle("active", !!cfg.overlayItalic);
+
+  if (cfg.overlayTitleColor) {
+    overlayTitleColor = cfg.overlayTitleColor;
+    document.querySelectorAll("#titleColorSwatches .color-swatch").forEach(s => {
+      s.classList.toggle("selected", s.dataset.color === cfg.overlayTitleColor);
+    });
+  }
+  if (cfg.overlaySubColor) {
+    overlaySubColor = cfg.overlaySubColor;
+    document.querySelectorAll("#subColorSwatches .color-swatch").forEach(s => {
+      s.classList.toggle("selected", s.dataset.color === cfg.overlaySubColor);
+    });
+  }
+
+  // Subtitle
+  const subOn = !!cfg.subEnabled;
+  document.getElementById("subToggle").checked = subOn;
+  document.getElementById("subStylePanel").classList.toggle("open", subOn);
+  document.getElementById("subToggleLabel").classList.toggle("on", subOn);
+  if (cfg.subFont)        document.getElementById("subFont").value        = cfg.subFont;
+  if (cfg.subFontSize)    document.getElementById("subFontSize").value    = cfg.subFontSize;
+  if (cfg.subMaxChars)    document.getElementById("subMaxChars").value    = cfg.subMaxChars;
+  if (cfg.subPosition)    document.getElementById("subPosition").value    = cfg.subPosition;
+  if (cfg.subBorderStyle) document.getElementById("subBorderStyle").value = cfg.subBorderStyle;
+  subBoldBtn.classList.toggle("active",   !!cfg.subBold);
+  subItalicBtn.classList.toggle("active", !!cfg.subItalic);
+  if (cfg.subTextColor) {
+    subTextColor = cfg.subTextColor;
+    document.querySelectorAll("#subTextSwatches .sub-swatch").forEach(s => {
+      s.classList.toggle("selected", s.dataset.color === cfg.subTextColor);
+    });
+  }
+  if (cfg.subBgColor) {
+    subBgColor = cfg.subBgColor;
+    document.querySelectorAll("#subBgSwatches .sub-swatch").forEach(s => {
+      s.classList.toggle("selected", s.dataset.color === cfg.subBgColor);
+    });
+  }
+
+  updateStats();
+  updateRunBtn();
+}
+
+function getAllConfigs() {
+  try { return JSON.parse(localStorage.getItem(CONFIG_STORE_KEY) || "[]"); } catch { return []; }
+}
+function saveAllConfigs(list) {
+  localStorage.setItem(CONFIG_STORE_KEY, JSON.stringify(list));
+}
+
+// ── Save Config modal ──
+document.getElementById("saveConfigBtn").addEventListener("click", () => {
+  document.getElementById("configName").value = "";
+  document.getElementById("saveConfigModal").classList.add("show");
+  setTimeout(() => document.getElementById("configName").focus(), 80);
+});
+document.getElementById("saveConfigModalClose").addEventListener("click", () => document.getElementById("saveConfigModal").classList.remove("show"));
+document.getElementById("saveConfigCancel").addEventListener("click",     () => document.getElementById("saveConfigModal").classList.remove("show"));
+document.getElementById("saveConfigModal").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("show"); });
+
+document.getElementById("saveConfigConfirm").addEventListener("click", () => {
+  const name = document.getElementById("configName").value.trim();
+  if (!name) { document.getElementById("configName").focus(); return; }
+
+  const list = getAllConfigs();
+  const existing = list.findIndex(c => c.name === name);
+  const entry = { name, savedAt: new Date().toISOString(), data: captureConfig() };
+  if (existing >= 0) list[existing] = entry; else list.push(entry);
+  saveAllConfigs(list);
+  document.getElementById("saveConfigModal").classList.remove("show");
+  log(`✅ Đã lưu cấu hình "${name}"`, "success");
+});
+
+// Enter key in config name input
+document.getElementById("configName").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("saveConfigConfirm").click();
+});
+
+// ── Load Config modal ──
+function renderConfigList() {
+  const list = getAllConfigs();
+  const el   = document.getElementById("configList");
+  if (!list.length) {
+    el.innerHTML = `<div class="cfg-empty">Chưa có cấu hình nào được lưu.</div>`;
+    return;
+  }
+  el.innerHTML = "";
+  [...list].reverse().forEach(entry => {
+    const d = new Date(entry.savedAt);
+    const dateStr = d.toLocaleDateString("vi-VN") + " " + d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    const item = document.createElement("div");
+    item.className = "cfg-item";
+    // Build quick summary tags
+    const tags = [
+      entry.data.aspectRatio,
+      entry.data.lang === "vi" ? "Tiếng Việt" : entry.data.lang === "en" ? "English" : entry.data.lang,
+      entry.data.gender === "female" ? "Nữ" : "Nam",
+      entry.data.subEnabled ? "Subtitle ✓" : "",
+      entry.data.bgMusicPath ? "🎵" : "",
+    ].filter(Boolean).join(" · ");
+
+    item.innerHTML = `
+      <div class="cfg-info">
+        <div class="cfg-name">${entry.name}</div>
+        <div class="cfg-meta">${tags}</div>
+        <div class="cfg-meta" style="opacity:0.5">${dateStr}</div>
+      </div>
+      <button class="cfg-del" data-name="${entry.name}" title="Xóa">🗑</button>
+    `;
+    item.querySelector(".cfg-info").addEventListener("click", () => {
+      applyConfig(entry.data);
+      document.getElementById("loadConfigModal").classList.remove("show");
+      log(`✅ Đã load cấu hình "${entry.name}"`, "success");
+    });
+    item.querySelector(".cfg-del").addEventListener("click", e => {
+      e.stopPropagation();
+      const updated = getAllConfigs().filter(c => c.name !== entry.name);
+      saveAllConfigs(updated);
+      renderConfigList();
+    });
+    el.appendChild(item);
+  });
+}
+
+document.getElementById("loadConfigBtn").addEventListener("click", () => {
+  renderConfigList();
+  document.getElementById("loadConfigModal").classList.add("show");
+});
+document.getElementById("loadConfigModalClose").addEventListener("click", () => document.getElementById("loadConfigModal").classList.remove("show"));
+document.getElementById("loadConfigModal").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("show"); });
 
 // ============================================================
 // ADD SECTION BUTTON
